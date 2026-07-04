@@ -35,7 +35,9 @@ export class RouteListComponent implements OnInit {
     }
 
     const grid = this.renderer.createElement('div');
+    grid.className = 'route-grid-container';
     this.applyStyles(grid, GRID_LAYOUT_STYLES);
+    
     this.ensureResponsiveStyles();
 
     const cardBuilder = new RouteCardBuilder(this.renderer);
@@ -61,8 +63,12 @@ export class RouteListComponent implements OnInit {
       styleEl.id = styleId;
       styleEl.innerHTML = `
         @media (max-width: 768px) {
-          .route-card { width: 100% !important; }
-          div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+          .route-grid-container { 
+            grid-template-columns: 1fr !important; 
+          }
+          .route-card { 
+            width: 100% !important; 
+          }
         }
       `;
       this.renderer.appendChild(document.head, styleEl);
