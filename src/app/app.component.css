@@ -1,0 +1,86 @@
+/* ==========================================================================
+   1. VARIABLES & RESET
+   ========================================================================== */
+:host {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    display: block;
+    background-color: #1a1a1a;
+    min-height: 100vh;
+}
+
+/* ==========================================================================
+   2. LAYOUT CONTAINERS
+   ========================================================================== */
+.main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh; 
+    padding: 60px 20px 40px; 
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden; 
+}
+
+.header-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    user-select: none;
+    gap: 0.75rem; /* Creates clean spacing between the title and subtitle */
+    animation: fade-in 10s cubic-bezier(0.23,1,0.32,1) both;
+}
+
+/* ==========================================================================
+   3. COMPONENT STYLES
+   ========================================================================== */
+.revolution-text {
+    font-family: "Times New Roman", Times, serif;
+    font-weight: normal;
+    font-size: 3.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    color: #a239ca; 
+    margin: 0;
+    text-align: center;
+}
+
+.revolution-subtext {
+    font-family: "Times New Roman", Times, serif;
+    font-style: italic;
+    font-size: 1.25rem;
+    color: #888888; /* Muted gray tone */
+    margin: 0;
+    text-align: center;
+    letter-spacing: 0.05rem;
+}
+
+/* ==========================================================================
+   4. ANIMATIONS
+   ========================================================================== */
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(-15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   5. RESPONSIVE OVERRIDES (MOBILE)
+   ========================================================================== */
+@media (max-width: 768px) {
+    .main {
+        padding-top: 40px;
+    }
+    
+    .revolution-text {
+        font-size: 2.5rem;
+        letter-spacing: 0.05rem;
+    }
+
+    .revolution-subtext {
+        font-size: 1.05rem;
+    }
+}
