@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { AppHeaderComponent } from './app-header.component';
-import { RouteListComponent } from './routes/route-list.component';
+import { AppHeaderComponent } from './header/app-header.component';
 
 @Component({
   selector: 'app-root',
@@ -10,8 +9,7 @@ import { RouteListComponent } from './routes/route-list.component';
   imports: [
     RouterOutlet, 
     CommonModule,
-    AppHeaderComponent,
-    RouteListComponent
+    AppHeaderComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
