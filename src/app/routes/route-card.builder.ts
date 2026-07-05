@@ -5,10 +5,14 @@ import { CARD_BASE_STYLES } from './route.constants';
 export class RouteCardBuilder {
   constructor(private renderer: Renderer2) {}
 
-  public build(submission: RouteSubmission): HTMLElement {
+  public build(submission: RouteSubmission, index: number): HTMLElement {
     const card = this.renderer.createElement('div');
     card.className = 'route-card';
     this.applyStyles(card, CARD_BASE_STYLES);
+
+    // Apply staggered animation entrance timing
+    card.style.animation = 'card-fade-in 0.6s cubic-bezier(0.23, 1, 0.32, 1) both';
+    card.style.animationDelay = `${index * 60}ms`;
 
     // --- ROW 1: Header (Title, Grade, Rating) ---
     const headerRow = this.createHeaderRow(submission);

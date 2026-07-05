@@ -38,11 +38,11 @@ export class RouteListComponent implements OnInit {
     grid.className = 'route-grid-container';
     this.applyStyles(grid, GRID_LAYOUT_STYLES);
     
-    this.ensureResponsiveStyles();
+    this.ensureResponsiveAndAnimationStyles();
 
     const cardBuilder = new RouteCardBuilder(this.renderer);
-    submissions.forEach(submission => {
-      const card = cardBuilder.build(submission);
+    submissions.forEach((submission, index) => {
+      const card = cardBuilder.build(submission, index);
       this.renderer.appendChild(grid, card);
     });
 
@@ -56,12 +56,22 @@ export class RouteListComponent implements OnInit {
     });
   }
 
-  private ensureResponsiveStyles(): void {
+  private ensureResponsiveAndAnimationStyles(): void {
     const styleId = 'app-route-list-grid-responsive';
     if (!document.getElementById(styleId)) {
       const styleEl = this.renderer.createElement('style');
       styleEl.id = styleId;
       styleEl.innerHTML = `
+        @keyframes card-fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
         @media (max-width: 768px) {
           .route-grid-container { 
             grid-template-columns: 1fr !important; 
