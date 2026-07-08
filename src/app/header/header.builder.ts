@@ -55,9 +55,11 @@ export class HeaderBuilder {
 
     const surveyLink = this.createSurveyButton();
     const searchButton = this.createSearchButton();
+    const qrButton = this.createQrButton();
 
     this.renderer.appendChild(buttonDeck, surveyLink);
     this.renderer.appendChild(buttonDeck, searchButton);
+    this.renderer.appendChild(buttonDeck, qrButton);
 
     setupResponsive(h1, p);
 
@@ -117,6 +119,31 @@ export class HeaderBuilder {
     });
 
     button.addEventListener('click', () => this.router.navigate(['/analytics']));
+
+    return button;
+  }
+
+  private createQrButton(): HTMLElement {
+    const button = this.renderer.createElement('button');
+    button.innerText = 'QR Code';
+
+    this.applyStyles(button, {
+      ...UNIFIED_BUTTON_STYLES,
+      color: 'rgb(255, 180, 0)',
+      backgroundColor: 'transparent',
+      border: '1px solid rgb(255, 180, 0)'
+    });
+
+    button.addEventListener('mouseenter', () => {
+      this.renderer.setStyle(button, 'backgroundColor', 'rgb(255, 180, 0)');
+      this.renderer.setStyle(button, 'color', '#1a1a1a');
+    });
+    button.addEventListener('mouseleave', () => {
+      this.renderer.setStyle(button, 'backgroundColor', 'transparent');
+      this.renderer.setStyle(button, 'color', 'rgb(255, 180, 0)');
+    });
+
+    button.addEventListener('click', () => this.router.navigate(['/qr-share']));
 
     return button;
   }
