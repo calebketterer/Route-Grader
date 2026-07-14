@@ -1,59 +1,214 @@
-import { Component, ElementRef, inject, OnInit, Renderer2 } from '@angular/core';
+import { Component, ElementRef, inject, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { RouteDataService } from './route-data.service';
-import { RouteCardBuilder } from './route-card.builder';
-import { GRID_CONTAINER_STYLES, GRID_LAYOUT_STYLES } from './route.constants';
+import { RouteSubmission } from './route.interface';
+import { AnalyticsViewBuilder, AnalyticsElements } from '../analytics/analytics-view.builder';
+import { AnalyticsFilterEngine } from '../analytics/analytics-filter.engine';
+import { ClusterAggregatorService, RouteCluster } from '../analytics/data-clustering/cluster-aggregator.service';
+import { RouteHomeRowBuilder, HomeRowClusterElements } from './route-home-row.builder';
+import { RouteCardAnimationHelper } from '../analytics/data-clustering/route-card-animation.helper';
 
 @Component({
   selector: 'app-route-list',
   standalone: true,
   template: ''
 })
-export class RouteListComponent implements OnInit {
+export class RouteListComponent implements OnInit, OnDestroy {
   private readonly el = inject(ElementRef);
   private readonly renderer = inject(Renderer2);
   private readonly dataService = inject(RouteDataService);
+  private readonly aggregator = inject(ClusterAggregatorService);
+
+  private allSubmissions: RouteSubmission[] = [];
+  private filteredSubmissions: RouteSubmission[] = [];
+  private isAdvancedOpen = false;
+  private viewBuilder!: AnalyticsViewBuilder;
+  private nodes!: AnalyticsElements;
+  private gridResizeObserver?: ResizeObserver;
+  private currentLayoutColumns = 2;
 
   public async ngOnInit(): Promise<void> {
     const host = this.el.nativeElement;
-    const container = this.renderer.createElement('div');
-    this.applyStyles(container, GRID_CONTAINER_STYLES);
 
-    const rawSubmissions = await this.dataService.fetchSubmissions();
-    const submissions = rawSubmissions.filter(sub => 
+    this.viewBuilder = new AnalyticsViewBuilder(this.renderer);
+    this.nodes = this.viewBuilder.build();
+    this.renderer.appendChild(host, this.nodes.container);
+
+    this.renderer.setStyle(this.nodes.resultsGrid, 'position', 'relative');
+    this.renderer.setStyle(this.nodes.resultsGrid, 'marginTop', '1.5rem');
+
+    this.nodes.toggleBtn.addEventListener('click', () => this.toggleAdvancedPanel());
+
+    const controls = [
+      this.nodes.searchInput,
+      this.nodes.gymSelect,
+      this.nodes.sortBySelect,
+      this.nodes.orderSelect
+    ];
+    
+    controls.forEach(ctrl => {
+      ['input', 'change'].forEach(evt => {
+        ctrl.addEventListener(evt, () => this.executePipeline());
+      });
+    });
+
+    this.ensureResponsiveAndAnimationStyles();
+
+    this.gridResizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const containerWidth = entry.contentRect.width;
+        const targetColumns = containerWidth < 920 ? 1 : 2;
+
+        if (targetColumns !== this.currentLayoutColumns) {
+          this.currentLayoutColumns = targetColumns;
+          this.renderer.setStyle(
+            this.nodes.resultsGrid, 
+            'gridTemplateColumns', 
+            targetColumns === 1 ? '1fr' : 'repeat(2, 1fr)'
+          );
+        }
+
+        const activeHeaders = Array.from(this.nodes.resultsGrid.querySelectorAll('.analytics-route-header-row'));
+        activeHeaders.forEach((header: any) => {
+          if (header.activeConnectorLine && header.associatedDrawerContainer) {
+            RouteCardAnimationHelper.updateLinePosition(
+              this.renderer,
+              this.nodes.resultsGrid,
+              header,
+              header.associatedDrawerContainer,
+              header.activeConnectorLine
+            );
+          }
+        });
+      }
+    });
+    this.gridResizeObserver.observe(this.nodes.container);
+
+    await this.loadDataset();
+  }
+
+  public ngOnDestroy(): void {
+    if (this.viewBuilder) {
+      this.viewBuilder.destroy();
+    }
+    if (this.gridResizeObserver) {
+      this.gridResizeObserver.disconnect();
+    }
+  }
+
+  private async loadDataset(): Promise<void> {
+    const raw = await this.dataService.fetchSubmissions();
+    this.allSubmissions = raw.filter(sub => 
       sub.routeName && 
       !sub.routeName.toLowerCase().includes('route name?') &&
       sub.timestamp.toLowerCase().trim() !== 'timestamp'
     );
 
-    if (submissions.length === 0) {
-      const loading = this.renderer.createElement('p');
-      loading.innerText = 'Loading route records...';
-      this.applyStyles(loading, { color: '#888888', fontFamily: 'monospace', textAlign: 'center' });
-      this.renderer.appendChild(container, loading);
-      this.renderer.appendChild(host, container);
+    this.populateGymDropdown();
+    this.executePipeline();
+  }
+
+  private populateGymDropdown(): void {
+    const gyms = this.allSubmissions
+      .map(sub => (sub.location || '').trim())
+      .filter(gym => gym.length > 0);
+
+    Array.from(new Set(gyms))
+      .sort((a, b) => a.localeCompare(b))
+      .forEach(gymName => {
+        const optionEl = this.renderer.createElement('option');
+        optionEl.value = gymName;
+        optionEl.innerText = gymName;
+        this.renderer.appendChild(this.nodes.gymSelect, optionEl);
+      });
+  }
+
+  private toggleAdvancedPanel(): void {
+    this.isAdvancedOpen = !this.isAdvancedOpen;
+    this.renderer.setStyle(this.nodes.advancedPanel, 'display', this.isAdvancedOpen ? 'flex' : 'none');
+    
+    const color = this.isAdvancedOpen ? '#ffb400' : '#ff6600';
+    this.nodes.toggleBtn.style.color = color;
+    this.nodes.toggleBtn.style.borderColor = color;
+  }
+
+  private executePipeline(): void {
+    const searchVal = this.nodes.searchInput.value.trim().toLowerCase();
+    const gymVal = this.nodes.gymSelect.value;
+
+    // Direct fallback layer bypasses standard filter engine constraints entirely to prevent truncation
+    if (!searchVal && gymVal === 'all') {
+      this.filteredSubmissions = [...this.allSubmissions];
+    } else {
+      const options = {
+        query: this.nodes.searchInput.value,
+        sortBy: this.nodes.sortBySelect.value,
+        order: this.nodes.orderSelect.value as 'asc' | 'desc',
+        grade: 'all',
+        rating: 'all',
+        status: 'all',
+        gym: gymVal
+      };
+      this.filteredSubmissions = AnalyticsFilterEngine.filter(this.allSubmissions, options);
+    }
+
+    this.renderFilteredCards();
+  }
+
+  private sortClustersByNewestSubmission(clusters: RouteCluster[]): RouteCluster[] {
+    return clusters.sort((a, b) => {
+      const getNewestTime = (c: RouteCluster) => {
+        const times = c.submissions.map(s => {
+          const parsed = Date.parse(s.timestamp);
+          return isNaN(parsed) ? 0 : parsed;
+        });
+        return times.length > 0 ? Math.max(...times) : 0;
+      };
+      return getNewestTime(b) - getNewestTime(a);
+    });
+  }
+
+  private renderFilteredCards(): void {
+    this.nodes.resultsGrid.innerHTML = '';
+
+    if (this.nodes.searchInput.value.trim() && this.filteredSubmissions.length === 0) {
+      const noResults = this.renderer.createElement('p');
+      noResults.innerText = 'No matching route submissions found.';
+      this.renderer.setStyle(noResults, 'color', '#888888');
+      this.renderer.setStyle(noResults, 'fontStyle', 'italic');
+      this.renderer.setStyle(noResults, 'gridColumn', '1 / -1');
+      this.renderer.appendChild(this.nodes.resultsGrid, noResults);
       return;
     }
 
-    const grid = this.renderer.createElement('div');
-    grid.className = 'route-grid-container';
-    this.applyStyles(grid, GRID_LAYOUT_STYLES);
+    let clusteredRoutes = this.aggregator.aggregate(this.filteredSubmissions);
     
-    this.ensureResponsiveAndAnimationStyles();
+    // Always default to sorting clusters by the absolute newest submission if sort parameters are unchanged
+    if (this.nodes.sortBySelect.value === 'timestamp' && this.nodes.orderSelect.value === 'desc') {
+      clusteredRoutes = this.sortClustersByNewestSubmission(clusteredRoutes);
+    }
 
-    const cardBuilder = new RouteCardBuilder(this.renderer);
-    submissions.forEach((submission, index) => {
-      const card = cardBuilder.build(submission, index);
-      this.renderer.appendChild(grid, card);
-    });
+    const rowBuilder = new RouteHomeRowBuilder(this.renderer);
+    const elementsList: HomeRowClusterElements[] = clusteredRoutes.map((cluster, index) => 
+      rowBuilder.build(cluster, index)
+    );
 
-    this.renderer.appendChild(container, grid);
-    this.renderer.appendChild(host, container);
-  }
+    if (this.currentLayoutColumns === 2) {
+      for (let i = 0; i < elementsList.length; i += 2) {
+        const itemLeft = elementsList[i];
+        const itemRight = elementsList[i + 1];
 
-  private applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
-    Object.entries(styles).forEach(([property, value]) => {
-      this.renderer.setStyle(element, property, value);
-    });
+        if (itemLeft) this.renderer.appendChild(this.nodes.resultsGrid, itemLeft.header);
+        if (itemRight) this.renderer.appendChild(this.nodes.resultsGrid, itemRight.header);
+
+        if (itemLeft) this.renderer.appendChild(this.nodes.resultsGrid, itemLeft.drawer);
+        if (itemRight) this.renderer.appendChild(this.nodes.resultsGrid, itemRight.drawer);
+      }
+    } else {
+      elementsList.forEach(item => {
+        this.renderer.appendChild(this.nodes.resultsGrid, item.header);
+        this.renderer.appendChild(this.nodes.resultsGrid, item.drawer);
+      });
+    }
   }
 
   private ensureResponsiveAndAnimationStyles(): void {
@@ -63,22 +218,12 @@ export class RouteListComponent implements OnInit {
       styleEl.id = styleId;
       styleEl.innerHTML = `
         @keyframes card-fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 768px) {
-          .route-grid-container { 
-            grid-template-columns: 1fr !important; 
-          }
-          .route-card { 
-            width: 100% !important; 
-          }
+        @media (max-width: 920px) {
+          .route-grid-container { grid-template-columns: 1fr !important; }
+          .analytics-route-header-row { width: 100% !important; }
         }
       `;
       this.renderer.appendChild(document.head, styleEl);

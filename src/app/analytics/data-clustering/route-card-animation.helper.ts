@@ -18,7 +18,7 @@ export class RouteCardAnimationHelper {
     
     renderer.setStyle(line, 'position', 'absolute');
     renderer.setStyle(line, 'width', '2px');
-    renderer.setStyle(line, 'background', '#ff6600');
+    renderer.setStyle(line, 'background', '#ffb400'); // Swapped from orange to gold to match theme
     renderer.setStyle(line, 'zIndex', '1');
     renderer.setStyle(line, 'pointerEvents', 'none');
     renderer.setStyle(line, 'transformOrigin', 'top center');

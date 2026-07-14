@@ -54,11 +54,9 @@ export class HeaderBuilder {
     this.applyStyles(buttonDeck, BUTTON_DECK_STYLES);
 
     const surveyLink = this.createSurveyButton();
-    const searchButton = this.createSearchButton();
     const qrButton = this.createQrButton();
 
     this.renderer.appendChild(buttonDeck, surveyLink);
-    this.renderer.appendChild(buttonDeck, searchButton);
     this.renderer.appendChild(buttonDeck, qrButton);
 
     setupResponsive(h1, p);
@@ -96,31 +94,6 @@ export class HeaderBuilder {
     });
 
     return link;
-  }
-
-  private createSearchButton(): HTMLElement {
-    const button = this.renderer.createElement('button');
-    button.innerText = 'Search for Specifics';
-    
-    this.applyStyles(button, {
-      ...UNIFIED_BUTTON_STYLES,
-      color: '#ff6600',
-      backgroundColor: 'transparent',
-      border: '1px solid #ff6600'
-    });
-
-    button.addEventListener('mouseenter', () => {
-      this.renderer.setStyle(button, 'backgroundColor', '#ff6600');
-      this.renderer.setStyle(button, 'color', '#1a1a1a');
-    });
-    button.addEventListener('mouseleave', () => {
-      this.renderer.setStyle(button, 'backgroundColor', 'transparent');
-      this.renderer.setStyle(button, 'color', '#ff6600');
-    });
-
-    button.addEventListener('click', () => this.router.navigate(['/analytics']));
-
-    return button;
   }
 
   private createQrButton(): HTMLElement {
