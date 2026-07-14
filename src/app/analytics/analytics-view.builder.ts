@@ -11,6 +11,7 @@ import {
 
 export interface AnalyticsElements {
   container: HTMLElement;
+  searchDeck: HTMLElement;
   searchInput: HTMLInputElement;
   gymSelect: HTMLSelectElement;
   toggleBtn: HTMLButtonElement;
@@ -30,27 +31,35 @@ export class AnalyticsViewBuilder {
     const container = this.renderer.createElement('div');
     this.applyStyles(container, ANALYTICS_CONTAINER_STYLES);
 
-    // Search Deck Wrap Container
     const searchDeck = this.renderer.createElement('div');
     this.applyStyles(searchDeck, SEARCH_DECK_STYLES);
 
-    // Row 1: Primary Controls (Just Search Bar and Advanced Toggle Button)
     const primaryRow = this.renderer.createElement('div');
     this.applyStyles(primaryRow, CONTROL_ROW_STYLES);
 
     const searchInput = this.renderer.createElement('input') as HTMLInputElement;
     searchInput.setAttribute('type', 'text');
     searchInput.setAttribute('placeholder', 'Search route name...');
-    this.applyStyles(searchInput, { ...INPUT_CONTROL_STYLES, flex: '1', minWidth: '200px' });
+    this.applyStyles(searchInput, { ...INPUT_CONTROL_STYLES, flex: '1', minWidth: '120px' });
     this.renderer.appendChild(primaryRow, searchInput);
 
     const toggleBtn = this.renderer.createElement('button') as HTMLButtonElement;
-    toggleBtn.innerText = '⚙ Filters';
     this.applyStyles(toggleBtn, ADVANCED_TOGGLE_STYLES);
+
+    // Build vector icon reference node 
+    const iconSpan = this.renderer.createElement('span');
+    iconSpan.innerText = '\u2699'; // Gear Unicode symbol code
+    this.renderer.appendChild(toggleBtn, iconSpan);
+
+    // Build textual text container to hide gracefully on narrow devices
+    const textSpan = this.renderer.createElement('span');
+    textSpan.className = 'toggle-btn-text';
+    textSpan.innerText = ' \u00A0Filters';
+    this.renderer.appendChild(toggleBtn, textSpan);
+
     this.renderer.appendChild(primaryRow, toggleBtn);
     this.renderer.appendChild(searchDeck, primaryRow);
 
-    // Row 2: Advanced Panel Container (Gym Selector & Sorting Mechanisms)
     const advancedPanel = this.renderer.createElement('div');
     this.applyStyles(advancedPanel, ADVANCED_PANEL_STYLES);
 
@@ -85,7 +94,6 @@ export class AnalyticsViewBuilder {
     });
     this.renderer.appendChild(advancedPanel, orderSelect);
 
-    // Re-added legacy items to ensure AnalyticsComponent compiles safely before deletion
     const gradeSelect = this.renderer.createElement('select') as HTMLSelectElement;
     this.applyStyles(gradeSelect, { display: 'none' });
 
@@ -98,13 +106,13 @@ export class AnalyticsViewBuilder {
     this.renderer.appendChild(searchDeck, advancedPanel);
     this.renderer.appendChild(container, searchDeck);
 
-    // Results Layout Grid
     const resultsGrid = this.renderer.createElement('div');
     this.applyStyles(resultsGrid, GRID_LAYOUT_STYLES);
     this.renderer.appendChild(container, resultsGrid);
 
     return {
       container,
+      searchDeck,
       searchInput,
       gymSelect,
       toggleBtn,

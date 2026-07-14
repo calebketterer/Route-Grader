@@ -7,6 +7,9 @@ import { ClusterAggregatorService, RouteCluster } from '../analytics/data-cluste
 import { RouteHomeRowBuilder, HomeRowClusterElements } from './route-home-row.builder';
 import { RouteCardAnimationHelper } from '../analytics/data-clustering/route-card-animation.helper';
 
+// Adjust this single configuration variable to globally modify layout changes
+const RESPONSIVE_BREAKPOINT = 700;
+
 @Component({
   selector: 'app-route-list',
   standalone: true,
@@ -53,10 +56,9 @@ export class RouteListComponent implements OnInit, OnDestroy {
 
     this.ensureResponsiveAndAnimationStyles();
 
-    // Re-evaluate columns dynamically based on window width rather than fluctuating component bounds
     this.gridResizeObserver = new ResizeObserver(() => {
       const windowWidth = window.innerWidth;
-      const targetColumns = windowWidth < 920 ? 1 : 2;
+      const targetColumns = windowWidth < RESPONSIVE_BREAKPOINT ? 1 : 2;
 
       if (targetColumns !== this.currentLayoutColumns) {
         this.currentLayoutColumns = targetColumns;
@@ -161,9 +163,8 @@ export class RouteListComponent implements OnInit, OnDestroy {
   private renderFilteredCards(): void {
     this.nodes.resultsGrid.innerHTML = '';
 
-    // Calculate current target grid profile dynamically on render
     const windowWidth = window.innerWidth;
-    this.currentLayoutColumns = windowWidth < 920 ? 1 : 2;
+    this.currentLayoutColumns = windowWidth < RESPONSIVE_BREAKPOINT ? 1 : 2;
 
     this.renderer.setStyle(
       this.nodes.resultsGrid,
@@ -226,9 +227,10 @@ export class RouteListComponent implements OnInit, OnDestroy {
           from { opacity: 0; transform: translateY(15px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 920px) {
+        @media (max-width: ${RESPONSIVE_BREAKPOINT}px) {
           .route-grid-container { grid-template-columns: 1fr !important; }
           .analytics-route-header-row { width: 100% !important; }
+          .toggle-btn-text { display: none !important; }
         }
       `;
       this.renderer.appendChild(document.head, styleEl);
