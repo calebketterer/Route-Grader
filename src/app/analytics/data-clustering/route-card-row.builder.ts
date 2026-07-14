@@ -28,6 +28,7 @@ export class RouteCardRowBuilder {
       transition: 'background 0.2s ease, border-left-color 0.2s ease',
       gap: '0.65rem',
       width: '100%',
+      minWidth: '0px', // Prevents default flex item grid blowout
       boxSizing: 'border-box',
       position: 'relative',
       zIndex: '2'
@@ -48,17 +49,18 @@ export class RouteCardRowBuilder {
       justifyContent: 'space-between',
       alignItems: 'center',
       gap: '0.75rem',
-      width: '100%'
+      width: '100%',
+      minWidth: '0px'
     });
 
     const topLeftGroup = this.renderer.createElement('div');
     this.setStyles(topLeftGroup, { 
       flex: '1', 
+      minWidth: '0px',
       overflow: 'hidden', 
       textOverflow: 'ellipsis', 
       whiteSpace: 'nowrap' 
     });
-    // Dropped directly into one string element track to eliminate natural whitespace node breaks completely
     topLeftGroup.innerHTML = `<span style="font-weight: bold; color: #ffb400; font-size: 1.05rem;">${cluster.leaderName}</span><span style="color: #888888; font-size: 0.9rem;">, ${cluster.location}</span>`;
     this.renderer.appendChild(lineOne, topLeftGroup);
 
@@ -70,7 +72,8 @@ export class RouteCardRowBuilder {
       fontSize: '0.85rem',
       display: 'inline-flex',
       alignItems: 'center',
-      whiteSpace: 'nowrap'
+      whiteSpace: 'nowrap',
+      flexShrink: '0'
     });
     this.renderer.appendChild(lineOne, toggleArrow);
     this.renderer.appendChild(rowContainer, lineOne);
@@ -83,10 +86,8 @@ export class RouteCardRowBuilder {
       alignItems: 'center',
       fontSize: '0.85rem',
       color: '#cccccc',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
-      width: '100%'
+      width: '100%',
+      minWidth: '0px' // Overrides flex auto minimum constraints entirely
     });
 
     const cleanGrade = cluster.avgGrade === '5.1' ? '5.10' : cluster.avgGrade;
@@ -95,6 +96,12 @@ export class RouteCardRowBuilder {
 
     const summarySpan = this.renderer.createElement('span');
     summarySpan.innerHTML = `Graded as <strong>${cleanGrade}</strong> and ${ratingString} from <strong>${totalReviews}</strong> reviews since <strong>${cluster.firstReviewDate}</strong>`;
+    this.setStyles(summarySpan, {
+      width: '100%',
+      overflowWrap: 'break-word', // Safely wraps text to next line on mobile widths
+      wordBreak: 'break-word'
+    });
+    
     this.renderer.appendChild(lineTwo, summarySpan);
     this.renderer.appendChild(rowContainer, lineTwo);
 
@@ -103,7 +110,7 @@ export class RouteCardRowBuilder {
     this.setStyles(drawerPanel, {
       display: 'none',
       gridColumn: '1 / -1', 
-      gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
       gap: '1rem',
       padding: '1.25rem',
       border: '1px solid #2f2f2f',

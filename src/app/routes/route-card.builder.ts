@@ -41,11 +41,17 @@ export class RouteCardBuilder {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'baseline',
-      gap: '0.5rem'
+      gap: '0.5rem',
+      flexWrap: 'wrap' // Allows rating badge to drop onto a new line if layout constraints require it
     });
 
     const titleGroup = this.renderer.createElement('div');
-    this.applyStyles(titleGroup, { display: 'flex', alignItems: 'baseline', gap: '0.5rem' });
+    this.applyStyles(titleGroup, { 
+      display: 'flex', 
+      alignItems: 'baseline', 
+      gap: '0.5rem',
+      flexWrap: 'wrap' // Allows exceptionally long route names to wrap cleanly relative to the grade block
+    });
 
     const nameSpan = this.renderer.createElement('span');
     nameSpan.innerText = submission.routeName;

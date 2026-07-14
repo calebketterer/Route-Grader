@@ -59,7 +59,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
       for (const entry of entries) {
         const containerWidth = entry.contentRect.width;
         const targetColumns = containerWidth < 920 ? 1 : 2;
-        
+
         if (targetColumns !== this.currentLayoutColumns) {
           this.currentLayoutColumns = targetColumns;
           this.renderer.setStyle(
@@ -67,22 +67,20 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
             'gridTemplateColumns', 
             targetColumns === 1 ? '1fr' : 'repeat(2, 1fr)'
           );
-          this.renderFilteredCards();
-        } else {
-          // Real-time anchor snapping tracking engine loops here
-          const activeHeaders = Array.from(this.nodes.resultsGrid.querySelectorAll('.analytics-route-header-row'));
-          activeHeaders.forEach((header: any) => {
-            if (header.activeConnectorLine && header.associatedDrawerContainer) {
-              RouteCardAnimationHelper.updateLinePosition(
-                this.renderer,
-                this.nodes.resultsGrid,
-                header,
-                header.associatedDrawerContainer,
-                header.activeConnectorLine
-              );
-            }
-          });
         }
+
+        const activeHeaders = Array.from(this.nodes.resultsGrid.querySelectorAll('.analytics-route-header-row'));
+        activeHeaders.forEach((header: any) => {
+          if (header.activeConnectorLine && header.associatedDrawerContainer) {
+            RouteCardAnimationHelper.updateLinePosition(
+              this.renderer,
+              this.nodes.resultsGrid,
+              header,
+              header.associatedDrawerContainer,
+              header.activeConnectorLine
+            );
+          }
+        });
       }
     });
     this.gridResizeObserver.observe(this.nodes.container);
