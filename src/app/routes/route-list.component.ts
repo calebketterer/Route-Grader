@@ -53,33 +53,32 @@ export class RouteListComponent implements OnInit, OnDestroy {
 
     this.ensureResponsiveAndAnimationStyles();
 
-    this.gridResizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const containerWidth = entry.contentRect.width;
-        const targetColumns = containerWidth < 920 ? 1 : 2;
+    // Re-evaluate columns dynamically based on window width rather than fluctuating component bounds
+    this.gridResizeObserver = new ResizeObserver(() => {
+      const windowWidth = window.innerWidth;
+      const targetColumns = windowWidth < 920 ? 1 : 2;
 
-        if (targetColumns !== this.currentLayoutColumns) {
-          this.currentLayoutColumns = targetColumns;
-          this.renderer.setStyle(
-            this.nodes.resultsGrid, 
-            'gridTemplateColumns', 
-            targetColumns === 1 ? '1fr' : 'repeat(2, 1fr)'
+      if (targetColumns !== this.currentLayoutColumns) {
+        this.currentLayoutColumns = targetColumns;
+        this.renderer.setStyle(
+          this.nodes.resultsGrid, 
+          'gridTemplateColumns', 
+          targetColumns === 1 ? '1fr' : 'repeat(2, 1fr)'
+        );
+      }
+
+      const activeHeaders = Array.from(this.nodes.resultsGrid.querySelectorAll('.analytics-route-header-row'));
+      activeHeaders.forEach((header: any) => {
+        if (header.activeConnectorLine && header.associatedDrawerContainer) {
+          RouteCardAnimationHelper.updateLinePosition(
+            this.renderer,
+            this.nodes.resultsGrid,
+            header,
+            header.associatedDrawerContainer,
+            header.activeConnectorLine
           );
         }
-
-        const activeHeaders = Array.from(this.nodes.resultsGrid.querySelectorAll('.analytics-route-header-row'));
-        activeHeaders.forEach((header: any) => {
-          if (header.activeConnectorLine && header.associatedDrawerContainer) {
-            RouteCardAnimationHelper.updateLinePosition(
-              this.renderer,
-              this.nodes.resultsGrid,
-              header,
-              header.associatedDrawerContainer,
-              header.activeConnectorLine
-            );
-          }
-        });
-      }
+      });
     });
     this.gridResizeObserver.observe(this.nodes.container);
 
@@ -132,23 +131,16 @@ export class RouteListComponent implements OnInit, OnDestroy {
   }
 
   private executePipeline(): void {
-    const searchVal = this.nodes.searchInput.value.trim().toLowerCase();
-    const gymVal = this.nodes.gymSelect.value;
-
-    if (!searchVal && gymVal === 'all') {
-      this.filteredSubmissions = [...this.allSubmissions];
-    } else {
-      const options = {
-        query: this.nodes.searchInput.value,
-        sortBy: this.nodes.sortBySelect.value,
-        order: this.nodes.orderSelect.value as 'asc' | 'desc',
-        grade: 'all',
-        rating: 'all',
-        status: 'all',
-        gym: gymVal
-      };
-      this.filteredSubmissions = AnalyticsFilterEngine.filter(this.allSubmissions, options);
-    }
+    const options = {
+      query: this.nodes.searchInput.value,
+      sortBy: this.nodes.sortBySelect.value,
+      order: this.nodes.orderSelect.value as 'asc' | 'desc',
+      grade: 'all',
+      rating: 'all',
+      status: 'all',
+      gym: this.nodes.gymSelect.value
+    };
+    this.filteredSubmissions = AnalyticsFilterEngine.filter(this.allSubmissions, options);
 
     this.renderFilteredCards();
   }
@@ -168,6 +160,16 @@ export class RouteListComponent implements OnInit, OnDestroy {
 
   private renderFilteredCards(): void {
     this.nodes.resultsGrid.innerHTML = '';
+
+    // Calculate current target grid profile dynamically on render
+    const windowWidth = window.innerWidth;
+    this.currentLayoutColumns = windowWidth < 920 ? 1 : 2;
+
+    this.renderer.setStyle(
+      this.nodes.resultsGrid,
+      'gridTemplateColumns',
+      this.currentLayoutColumns === 1 ? '1fr' : 'repeat(2, 1fr)'
+    );
 
     if (this.nodes.searchInput.value.trim() && this.filteredSubmissions.length === 0) {
       const noResults = this.renderer.createElement('p');
@@ -190,7 +192,6 @@ export class RouteListComponent implements OnInit, OnDestroy {
       rowBuilder.build(cluster, index)
     );
 
-    // Apply staggered animation inline styling before nodes get mounted to the DOM
     elementsList.forEach((item, index) => {
       const delay = Math.min(index * 0.05, 0.8);
       this.renderer.setStyle(item.header, 'animation', `card-fade-in 0.4s cubic-bezier(0.25, 1, 0.5, 1) ${delay}s both`);
