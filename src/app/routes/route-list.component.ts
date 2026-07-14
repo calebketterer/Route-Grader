@@ -135,7 +135,6 @@ export class RouteListComponent implements OnInit, OnDestroy {
     const searchVal = this.nodes.searchInput.value.trim().toLowerCase();
     const gymVal = this.nodes.gymSelect.value;
 
-    // Direct fallback layer bypasses standard filter engine constraints entirely to prevent truncation
     if (!searchVal && gymVal === 'all') {
       this.filteredSubmissions = [...this.allSubmissions];
     } else {
@@ -182,7 +181,6 @@ export class RouteListComponent implements OnInit, OnDestroy {
 
     let clusteredRoutes = this.aggregator.aggregate(this.filteredSubmissions);
     
-    // Always default to sorting clusters by the absolute newest submission if sort parameters are unchanged
     if (this.nodes.sortBySelect.value === 'timestamp' && this.nodes.orderSelect.value === 'desc') {
       clusteredRoutes = this.sortClustersByNewestSubmission(clusteredRoutes);
     }
@@ -191,6 +189,12 @@ export class RouteListComponent implements OnInit, OnDestroy {
     const elementsList: HomeRowClusterElements[] = clusteredRoutes.map((cluster, index) => 
       rowBuilder.build(cluster, index)
     );
+
+    // Apply staggered animation inline styling before nodes get mounted to the DOM
+    elementsList.forEach((item, index) => {
+      const delay = Math.min(index * 0.05, 0.8);
+      this.renderer.setStyle(item.header, 'animation', `card-fade-in 0.4s cubic-bezier(0.25, 1, 0.5, 1) ${delay}s both`);
+    });
 
     if (this.currentLayoutColumns === 2) {
       for (let i = 0; i < elementsList.length; i += 2) {
@@ -218,7 +222,7 @@ export class RouteListComponent implements OnInit, OnDestroy {
       styleEl.id = styleId;
       styleEl.innerHTML = `
         @keyframes card-fade-in {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(15px); }
           to { opacity: 1; transform: translateY(0); }
         }
         @media (max-width: 920px) {
