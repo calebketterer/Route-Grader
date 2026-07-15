@@ -1,7 +1,7 @@
 import { Renderer2 } from '@angular/core';
 import { RouteCluster } from './cluster-aggregator.service';
-import { RouteCardBuilder } from '../../routes/route-card.builder';
-import { RouteCardAnimationHelper } from './route-card-animation.helper';
+import { RouteCardBuilder } from '../route-card.builder';
+import { RouteCardAnimationHelper } from '../ui-shared/route-card-animation.helper';
 
 export interface RowClusterElements {
   header: HTMLElement;

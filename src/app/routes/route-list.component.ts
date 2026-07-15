@@ -1,11 +1,11 @@
 import { Component, ElementRef, inject, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { RouteDataService } from './route-data.service';
 import { RouteSubmission } from './route.interface';
-import { AnalyticsViewBuilder, AnalyticsElements } from '../analytics/analytics-view.builder';
-import { AnalyticsFilterEngine } from '../analytics/analytics-filter.engine';
-import { ClusterAggregatorService, RouteCluster } from '../analytics/data-clustering/cluster-aggregator.service';
+import { RouteViewBuilder, RouteViewElements } from './ui-shared/route-view.builder';
+import { RouteFilterEngine } from './ui-shared/route-filter.engine';
+import { ClusterAggregatorService, RouteCluster } from './data-clustering/cluster-aggregator.service';
 import { RouteHomeRowBuilder, HomeRowClusterElements } from './route-home-row.builder';
-import { RouteCardAnimationHelper } from '../analytics/data-clustering/route-card-animation.helper';
+import { RouteCardAnimationHelper } from './ui-shared/route-card-animation.helper';
 
 // Adjust this single configuration variable to globally modify layout changes
 const RESPONSIVE_BREAKPOINT = 700;
@@ -24,15 +24,15 @@ export class RouteListComponent implements OnInit, OnDestroy {
   private allSubmissions: RouteSubmission[] = [];
   private filteredSubmissions: RouteSubmission[] = [];
   private isAdvancedOpen = false;
-  private viewBuilder!: AnalyticsViewBuilder;
-  private nodes!: AnalyticsElements;
+  private viewBuilder!: RouteViewBuilder;
+  private nodes!: RouteViewElements;
   private gridResizeObserver?: ResizeObserver;
   private currentLayoutColumns = 2;
 
   public async ngOnInit(): Promise<void> {
     const host = this.el.nativeElement;
 
-    this.viewBuilder = new AnalyticsViewBuilder(this.renderer);
+    this.viewBuilder = new RouteViewBuilder(this.renderer);
     this.nodes = this.viewBuilder.build();
     this.renderer.appendChild(host, this.nodes.container);
 
@@ -142,7 +142,7 @@ export class RouteListComponent implements OnInit, OnDestroy {
       status: 'all',
       gym: this.nodes.gymSelect.value
     };
-    this.filteredSubmissions = AnalyticsFilterEngine.filter(this.allSubmissions, options);
+    this.filteredSubmissions = RouteFilterEngine.filter(this.allSubmissions, options);
 
     this.renderFilteredCards();
   }

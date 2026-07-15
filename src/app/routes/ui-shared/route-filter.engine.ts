@@ -1,4 +1,4 @@
-import { RouteSubmission } from '../routes/route.interface';
+import { RouteSubmission } from '../route.interface';
 
 export interface AdvancedFilterOptions {
   query: string;
@@ -10,20 +10,17 @@ export interface AdvancedFilterOptions {
   gym: string;
 }
 
-export class AnalyticsFilterEngine {
+export class RouteFilterEngine {
   public static filter(submissions: RouteSubmission[], options: AdvancedFilterOptions): RouteSubmission[] {
     const query = (options.query || '').toLowerCase().trim();
 
-    // Map through dataset regardless of whether text query is present
     let matches = submissions.filter(sub => {
-      // If text query exists, evaluate it. Otherwise, pass automatically.
       if (query) {
         const routeNameLower = (sub.routeName || '').toLowerCase();
         const matchesName = routeNameLower.includes(query);
         if (!matchesName) return false;
       }
 
-      // Strictly evaluate selected gym drop-down parameters
       if (options.gym && options.gym !== 'all') {
         const gymValue = (sub.location || '').toLowerCase().trim();
         if (gymValue !== options.gym.toLowerCase().trim()) return false;
@@ -46,12 +43,10 @@ export class AnalyticsFilterEngine {
       return true;
     });
 
-    // Execute dataset ordering logic
     matches.sort((a, b) => {
       const sortBy = options.sortBy;
       const isAsc = options.order === 'asc';
 
-      // Explicit property lookups to prevent structural index bugs
       let valA: any = '';
       let valB: any = '';
 
@@ -77,7 +72,6 @@ export class AnalyticsFilterEngine {
           ? valA.localeCompare(valB, undefined, { numeric: true })
           : valB.localeCompare(valA, undefined, { numeric: true });
       } else {
-        // Fallback catch-all for custom keys
         valA = (a as any)[sortBy] || '';
         valB = (b as any)[sortBy] || '';
       }

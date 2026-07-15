@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RouteSubmission } from '../../routes/route.interface';
+import { RouteSubmission } from '../route.interface';
 import { SimilarityEngine } from './similarity-engine';
 import { NameNormalizer } from './name-normalizer';
 

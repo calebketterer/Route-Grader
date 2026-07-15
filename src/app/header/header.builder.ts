@@ -72,7 +72,7 @@ export class HeaderBuilder {
 
   private createSurveyButton(): HTMLElement {
     const link = this.renderer.createElement('a');
-    link.innerText = 'Submit New Route Feedback ↗';
+    link.innerText = 'Submit Route Feedback ↗';
     link.setAttribute('href', 'https://forms.gle/2zr1GgqyTHfC2Qys7');
     link.setAttribute('target', '_blank');
     link.setAttribute('rel', 'noopener noreferrer');

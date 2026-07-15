@@ -1,15 +1,15 @@
 import { Renderer2 } from '@angular/core';
-import { GRID_LAYOUT_STYLES } from '../routes/route.constants';
 import {
+  GRID_LAYOUT_STYLES,
   ANALYTICS_CONTAINER_STYLES,
   SEARCH_DECK_STYLES,
   CONTROL_ROW_STYLES,
   ADVANCED_PANEL_STYLES,
   INPUT_CONTROL_STYLES,
   ADVANCED_TOGGLE_STYLES
-} from './analytics.constants';
+} from '../route.constants';
 
-export interface AnalyticsElements {
+export interface RouteViewElements {
   container: HTMLElement;
   searchDeck: HTMLElement;
   searchInput: HTMLInputElement;
@@ -24,10 +24,10 @@ export interface AnalyticsElements {
   resultsGrid: HTMLElement;
 }
 
-export class AnalyticsViewBuilder {
+export class RouteViewBuilder {
   constructor(private renderer: Renderer2) {}
 
-  public build(): AnalyticsElements {
+  public build(): RouteViewElements {
     const container = this.renderer.createElement('div');
     this.applyStyles(container, ANALYTICS_CONTAINER_STYLES);
 
@@ -46,12 +46,10 @@ export class AnalyticsViewBuilder {
     const toggleBtn = this.renderer.createElement('button') as HTMLButtonElement;
     this.applyStyles(toggleBtn, ADVANCED_TOGGLE_STYLES);
 
-    // Build vector icon reference node 
     const iconSpan = this.renderer.createElement('span');
-    iconSpan.innerText = '\u2699'; // Gear Unicode symbol code
+    iconSpan.innerText = '\u2699'; 
     this.renderer.appendChild(toggleBtn, iconSpan);
 
-    // Build textual text container to hide gracefully on narrow devices
     const textSpan = this.renderer.createElement('span');
     textSpan.className = 'toggle-btn-text';
     textSpan.innerText = ' \u00A0Filters';

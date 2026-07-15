@@ -1,7 +1,7 @@
 import { Renderer2 } from '@angular/core';
-import { RouteCluster } from '../analytics/data-clustering/cluster-aggregator.service';
+import { RouteCluster } from './data-clustering/cluster-aggregator.service';
 import { RouteCardBuilder } from './route-card.builder';
-import { RouteCardAnimationHelper } from '../analytics/data-clustering/route-card-animation.helper';
+import { RouteCardAnimationHelper } from './ui-shared/route-card-animation.helper';
 
 export interface HomeRowClusterElements {
   header: HTMLElement;
